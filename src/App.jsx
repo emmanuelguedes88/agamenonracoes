@@ -1,9 +1,10 @@
+import { FaInstagram, FaFacebook } from "react-icons/fa";
 
 import React, { useState, useEffect } from 'react';
 import { 
   ShoppingCart, Menu, X, PawPrint, ArrowRight, 
   Minus, Plus, Lock, CreditCard, Check, MapPin, 
-  Mail, Phone, Instagram, Facebook, MessageCircle,
+  Mail, Phone, MessageCircle,
   Star, ShieldCheck, QrCode
 } from 'lucide-react';
 
@@ -246,13 +247,15 @@ export default function App() {
           <h4 className="text-lg font-bold mb-4 text-amber-100">Redes Sociais 📱</h4>
           <div className="flex space-x-4">
             <a href="#" className="bg-white/10 hover:bg-orange-500 p-3 rounded-full transition transform hover:scale-110">
-              <Instagram className="w-5 h-5" />
+              <FaInstagram className="w-5 h-5" />
+
             </a>
             <a href="#" className="bg-white/10 hover:bg-orange-500 p-3 rounded-full transition transform hover:scale-110">
               <MessageCircle className="w-5 h-5" />
             </a>
             <a href="#" className="bg-white/10 hover:bg-orange-500 p-3 rounded-full transition transform hover:scale-110">
-              <Facebook className="w-5 h-5" />
+              <FaFacebook className="w-5 h-5" />
+
             </a>
           </div>
         </div>
