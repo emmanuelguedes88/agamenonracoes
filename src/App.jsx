@@ -8,7 +8,7 @@ import {
 // ==========================================
 // FIREBASE (lido do arquivo firebase.js que usa o .env)
 // ==========================================
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { signInWithRedirect, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, provider } from "./firebase";
 
 // ==========================================
@@ -66,7 +66,7 @@ export default function App() {
   // LOGIN / LOGOUT
   // ==========================================
   const fazerLoginComGoogle = () => {
-    signInWithPopup(auth, provider)
+    signInWithRedirect(auth, provider)
       .then((resultado) => {
         setUsuario(resultado.user);
         addToast('Bem-vindo(a), ' + primeiroNome(resultado.user) + '! 🐶', 'success');
