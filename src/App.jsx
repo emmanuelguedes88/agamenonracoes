@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaInstagram, FaFacebook } from "react-icons/fa";
 import {
   ShoppingCart, Menu, X, PawPrint, ArrowRight, Minus, Plus, Lock, CreditCard,
@@ -8,7 +8,7 @@ import {
 // ==========================================
 // FIREBASE (lido do arquivo firebase.js que usa o .env)
 // ==========================================
-import { signInWithRedirect, signOut, onAuthStateChanged } from "firebase/auth";
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { auth, provider } from "./firebase";
 
 // ==========================================
@@ -17,7 +17,7 @@ import { auth, provider } from "./firebase";
 const PRODUCTS = [
   { id: 1, name: "Ração Super Premium Cães Adultos", price: 189.90, category: "Cães", img: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&q=80&w=400" },
   { id: 2, name: "Sachê Premium Gatos Sabor Salmão", price: 4.50, category: "Gatos", img: "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&q=80&w=400" },
-  { id: 3, name: "Coleira Peitoral Reflexiva", price: 45.00, category: "Acessórios", img: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&q=80&w=400" },
+  { id: 3, name: "Coleira Peitoral Reflexiva", price: 45.00, category: "Acessórios", img: "https://images.unsplash.com/photo-1517849845537-4d257902861a?auto=format&fit=crop&q=80&w=400" },
   { id: 4, name: "Brinquedo Osso de Borracha Resistente", price: 22.90, category: "Brinquedos", img: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&q=80&w=400" },
   { id: 5, name: "Arranhador Torre para Gatos", price: 210.00, category: "Gatos", img: "https://images.unsplash.com/photo-1526336179256-1347bdb255ee?auto=format&fit=crop&q=80&w=400" },
   { id: 6, name: "Cama Confortável Nuvem", price: 120.00, category: "Conforto", img: "https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?auto=format&fit=crop&q=80&w=400" },
@@ -26,7 +26,7 @@ const PRODUCTS = [
 ];
 
 // Foto de reserva caso o link de alguma imagem pare de funcionar
-const FALLBACK_IMG = "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&q=80&w=400";
+const FALLBACK_IMG = "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&q=80&w=400";
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -41,6 +41,8 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [usuario, setUsuario] = useState(null);
+  const mobileMenuRef = useRef(null);
+  const mobileMenuButtonRef = useRef(null);
 
   const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -62,11 +64,29 @@ export default function App() {
     return cancelar;
   }, []);
 
+  // Fecha o menu mobile ao tocar em qualquer lugar fora dele
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const handleClickFora = (event) => {
+      const dentroDoMenu = mobileMenuRef.current && mobileMenuRef.current.contains(event.target);
+      const noBotao = mobileMenuButtonRef.current && mobileMenuButtonRef.current.contains(event.target);
+      if (!dentroDoMenu && !noBotao) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickFora);
+    document.addEventListener('touchstart', handleClickFora);
+    return () => {
+      document.removeEventListener('mousedown', handleClickFora);
+      document.removeEventListener('touchstart', handleClickFora);
+    };
+  }, [isMobileMenuOpen]);
+
   // ==========================================
   // LOGIN / LOGOUT
   // ==========================================
   const fazerLoginComGoogle = () => {
-    signInWithRedirect(auth, provider)
+    signInWithPopup(auth, provider)
       .then((resultado) => {
         setUsuario(resultado.user);
         addToast('Bem-vindo(a), ' + primeiroNome(resultado.user) + '! 🐶', 'success');
@@ -134,9 +154,9 @@ export default function App() {
     <header className="fixed w-full top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => window.scrollTo(0, 0)}>
-            <PawPrint className="text-orange-500 w-8 h-8 mr-2" />
-            <span className="font-bold text-lg sm:text-xl text-amber-900 tracking-tight">Agamenon <span className="text-orange-500">Rações</span></span>
+          <div className="flex-shrink-0 flex items-center cursor-pointer mr-3 sm:mr-0" onClick={() => window.scrollTo(0, 0)}>
+            <PawPrint className="text-orange-500 w-6 h-6 sm:w-8 sm:h-8 mr-1.5 sm:mr-2 flex-shrink-0" />
+            <span className="font-bold text-base sm:text-xl text-amber-900 tracking-tight truncate">Agamenon <span className="text-orange-500">Rações</span></span>
           </div>
 
           <nav className="hidden md:flex space-x-8">
@@ -145,7 +165,7 @@ export default function App() {
             <a href="#historia" className="text-gray-600 hover:text-orange-500 transition font-medium">Nossa História</a>
           </nav>
 
-          <div className="flex items-center space-x-1 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {/* ÁREA DE LOGIN */}
             <div className="flex items-center sm:border-r border-gray-300 sm:pr-4">
               {!usuario ? (
@@ -153,15 +173,20 @@ export default function App() {
                   <LogIn className="w-5 h-5 sm:w-4 sm:h-4 sm:mr-2" /> <span className="hidden sm:inline">Entrar</span>
                 </button>
               ) : (
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="hidden sm:flex flex-col text-right">
+                <div className="flex items-center gap-3 sm:gap-3">
+                  <div className="hidden sm:flex flex-col text-right mr-1">
                     <span className="text-xs text-gray-500">Olá,</span>
                     <span className="text-sm font-bold text-amber-900 leading-none">{primeiroNome(usuario)}</span>
                   </div>
                   {usuario.photoURL && (
-                    <img src={usuario.photoURL} alt="Perfil" className="w-9 h-9 rounded-full border-2 border-orange-500 shadow-sm" />
+                    <img
+                      src={usuario.photoURL}
+                      alt="Perfil"
+                      referrerPolicy="no-referrer"
+                      className="w-9 h-9 rounded-full border-2 border-orange-500 shadow-sm"
+                    />
                   )}
-                  <button onClick={fazerLogout} className="text-gray-400 hover:text-red-500 ml-1 transition" title="Sair da conta">
+                  <button onClick={fazerLogout} className="text-gray-400 hover:text-red-500 ml-2 transition" title="Sair da conta">
                     <LogOut className="w-5 h-5" />
                   </button>
                 </div>
@@ -177,7 +202,7 @@ export default function App() {
               )}
             </button>
 
-            <button className="md:hidden text-gray-600 focus:outline-none p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <button ref={mobileMenuButtonRef} className="md:hidden text-gray-600 focus:outline-none p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               <Menu className="w-6 h-6" />
             </button>
           </div>
@@ -186,7 +211,7 @@ export default function App() {
 
       {/* Menu Mobile */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-gray-200 px-4 py-4 space-y-4 shadow-lg">
+        <div ref={mobileMenuRef} className="md:hidden bg-white border-b border-gray-200 px-4 py-4 space-y-4 shadow-lg">
           <div className="border-b border-gray-100 pb-4 mb-2">
             {!usuario ? (
               <button onClick={() => { fazerLoginComGoogle(); setIsMobileMenuOpen(false); }} className="w-full flex justify-center items-center font-bold text-white bg-orange-500 py-3 rounded-xl">
@@ -196,7 +221,12 @@ export default function App() {
               <div className="flex items-center justify-between bg-amber-50 p-3 rounded-xl">
                 <div className="flex items-center gap-3">
                   {usuario.photoURL && (
-                    <img src={usuario.photoURL} alt="Perfil" className="w-10 h-10 rounded-full border-2 border-orange-500" />
+                    <img
+                      src={usuario.photoURL}
+                      alt="Perfil"
+                      referrerPolicy="no-referrer"
+                      className="w-10 h-10 rounded-full border-2 border-orange-500"
+                    />
                   )}
                   <span className="font-bold text-amber-900">{usuario.displayName || 'Cliente'}</span>
                 </div>
@@ -351,8 +381,8 @@ export default function App() {
         <div>
           <h4 className="text-lg font-bold mb-4 text-amber-100">Redes Sociais 📱</h4>
           <div className="flex space-x-4">
-            <a href="#" className="bg-white/10 hover:bg-orange-500 p-3 rounded-full transition transform hover:scale-110"><FaInstagram className="w-5 h-5" /></a>
-            <a href="#" className="bg-white/10 hover:bg-orange-500 p-3 rounded-full transition transform hover:scale-110"><FaFacebook className="w-5 h-5" /></a>
+            <a href="https://www.instagram.com/agamenonracoes?stkn=MTNyY2ZhM2lmd2Y2ZQ==" target="_blank" rel="noopener noreferrer" title="Instagram da Agamenon Rações" className="bg-white/10 hover:bg-orange-500 p-3 rounded-full transition transform hover:scale-110"><FaInstagram className="w-5 h-5" /></a>
+            <a href="https://www.facebook.com/share/1d3Y9k8y42/" target="_blank" rel="noopener noreferrer" title="Facebook da Agamenon Rações" className="bg-white/10 hover:bg-orange-500 p-3 rounded-full transition transform hover:scale-110"><FaFacebook className="w-5 h-5" /></a>
           </div>
         </div>
       </div>
